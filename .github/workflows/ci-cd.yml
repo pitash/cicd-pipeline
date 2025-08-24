@@ -25,3 +25,23 @@ jobs:
         
     - name: Run tests
       run: npm run check
+
+  deploy:
+    needs: test
+    name: Deploy Job
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install packages
+      run: npm install 
+    
+    - name: Run apllication by PM2
+      run: |
+       ls-a
+       pm2 status
+       pm2 delete node-app || true
+       pm2 start "npm start" --name="node-app"
+       pm2 save
