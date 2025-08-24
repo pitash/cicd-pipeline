@@ -1,0 +1,27 @@
+name: CI/CD Pipeline for Node.js Application
+
+on:
+  push:
+    branches: [ main]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test Job
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Get code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js 22
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        
+    - name: Install packages
+      run: npm install
+        
+    - name: Run tests
+      run: npm run check
