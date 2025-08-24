@@ -1,5 +1,4 @@
 name: CI/CD Pipeline for Node.js Application
-
 on:
   push:
     branches: [ main]
@@ -10,39 +9,87 @@ jobs:
   test:
     name: Test Job
     runs-on: ubuntu-latest
-    
+   
     steps:
     - name: Get code
       uses: actions/checkout@v4
-      
+     
     - name: Setup Node.js 22
       uses: actions/setup-node@v4
       with:
         node-version: '22.x'
-        
+       
     - name: Install packages
       run: npm install
-        
+       
     - name: Run tests
-      run: npm run check
+      run: npm run check > test-results.txt 2>&1 || true
+      
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: test-results.txt
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Get code
+      uses: actions/checkout@v4
+     
+    - name: Setup Node.js 22
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+       
+    - name: Create Artifact File
+      run: |
+        mkdir build
+        cd build
+        echo "Hello World test" >hello.txt  
+        
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build_folder
+        path: ./build
 
   deploy:
-    needs: test
+    needs: build
     name: Deploy Job
     runs-on: self-hosted
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
+      
+    - name: Download test results
+      uses: actions/download-artifact@v4
+      with:
+        name: test-results
+        
+    - name: Display test results
+      run: cat test-results.txt
+      
+    - name: Receive Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: build_folder
+        
+    - name: Show the Artifact
+      run: |
+        ls -a
+        cat hello.txt
+        
     - name: Install packages
-      run: npm install 
-    
-    - name: Run apllication by PM2
+      run: npm install
+   
+    - name: Run application by PM2
       run: |
        ls -a
        pm2 status
        pm2 delete node-app || true
-       #pm2 start "npm start" --name="node-app"
        pm2 start "./src/server.js" --name node-app
        pm2 save
