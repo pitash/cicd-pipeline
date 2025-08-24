@@ -40,7 +40,7 @@ jobs:
     
     - name: Run apllication by PM2
       run: |
-       ls-a
+       ls -a
        pm2 status
        pm2 delete node-app || true
        pm2 start "npm start" --name="node-app"
